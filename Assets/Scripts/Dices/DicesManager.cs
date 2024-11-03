@@ -16,11 +16,15 @@ public class DicesManager : MonoBehaviour
     [SerializeField] private Text totalAllText;
     [SerializeField] private Text throwCountText;
     [SerializeField] private Text finalTotalCountText;
-
     [SerializeField] private Button throwButton;
     [SerializeField] private GameObject finalTotalUI;
     
     private const int MaxTotal = 200;
+    private const int MinRangeValue = 1;
+    private const int MaxRangeValue = 7;
+
+    private readonly List<Vector3Int> _allDicesList = new List<Vector3Int>();
+    
     private int _totalAll;
     private int _totalDices;
     private int _throwCount;
@@ -33,10 +37,7 @@ public class DicesManager : MonoBehaviour
     private int _randomNum2;
     private int _randomNum3;
     
-    private int _minValue = 1;
-    private int _maxValue = 7;
-
-    private void Start()
+    private void OnEnable()
     {
         firstDiceText.text = 6.ToString();
         secondDiceText.text = 6.ToString();
@@ -47,8 +48,11 @@ public class DicesManager : MonoBehaviour
         throwCountText.text = _throwCount.ToString();
         
         RandomNumFind();
+        
+        FindRandomValuesToMaxTotal();
+        EditList();
+        
     }
-
     public void StartDiceRollSimulation()
     {
         StartCoroutine(RollDiceSimulation());
@@ -60,12 +64,15 @@ public class DicesManager : MonoBehaviour
         const float interval = 0.1f; 
         var elapsedTime = 0f;
         
-        _throwCount++;
-        throwCountText.text = _throwCount.ToString();
-        
         while (elapsedTime < simulationDuration)
         {
-            CreateRandomDices();
+            _firstDiceResult = Random.Range(MinRangeValue, MaxRangeValue); 
+            _secondDiceResult = Random.Range(MinRangeValue, MaxRangeValue); 
+            _thirdDiceResult = Random.Range(MinRangeValue, MaxRangeValue); 
+            
+            firstDiceText.text = _firstDiceResult.ToString();
+            secondDiceText.text = _secondDiceResult.ToString();
+            thirdDiceText.text = _thirdDiceResult.ToString();
             
             elapsedTime += interval;
             throwButton.interactable = false;
@@ -74,207 +81,32 @@ public class DicesManager : MonoBehaviour
 
         }
         
-        ThrowCountControl();
-        CalculateSelectedNumbers();
-        AddDiceResults();
+        PrintDice(_allDicesList[_throwCount]);
+        AddDiceResults(_allDicesList[_throwCount]);
+        
+        throwCountText.text = (++_throwCount).ToString();
         
         if (_throwCount == 20)
         {
-            yield return new WaitForSeconds(3);
-
+            throwButton.interactable = false;
+            yield return new WaitForSeconds(2);
             finalTotalUI.SetActive(true);
-
             finalTotalCountText.text = _totalAll.ToString();
             
         }
         
     }
 
-    private void ThrowCountControl()
+    private void PrintDice(Vector3Int nums)
     {
-        switch (_throwCount)
-        {
-            case 10:
-            {
-                switch (_totalAll)
-                {
-                    case < 80:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 80 and < 100:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 100 and < 200:
-                        DetermineLowerMinMax();
-                        break;
-                }
-
-                CreateRandomDices();
-                break;
-            }
-            case 13:
-            {
-                switch (_totalAll)
-                {
-                    case < 110:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 110 and < 130:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 130 and < 200:
-                        DetermineLowerMinMax();
-                        break;
-                }
-                CreateRandomDices();
-                break;
-            }
-            case 15:
-            {
-                switch (_totalAll)
-                {
-                    case < 130:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 130 and < 150:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 150 and < 200:
-                        DetermineLowerMinMax();
-                        break;
-                }
-                CreateRandomDices();
-                break;
-            }
-            case 16:
-            {
-                switch (_totalAll)
-                {
-                    case < 140:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 140 and < 160:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 160 and < 180:
-                        DetermineLowerMinMax();
-                        break;
-                }
-            
-                CreateRandomDices();
-                break;
-            }
-            case 17:
-            {
-                switch (_totalAll)
-                {
-                    case < 150:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 150 and < 170:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 170 and < 190:
-                        DetermineLowerMinMax();
-                        break;
-                }
-            
-                CreateRandomDices();
-                break;
-            }
-            case 18:
-            {
-                switch (_totalAll)
-                {
-                    case < 160:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 160 and < 180:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 180 and < 200:
-                        DetermineLowerMinMax();
-                        break;
-                }
-            
-                CreateRandomDices();
-                break;
-            }
-            case 19:
-            {
-                switch (_totalAll)
-                {
-                    case < 170:
-                        DetermineUpperMinMax();
-                        break;
-                    case >= 170 and < 182:
-                        DetermineMediumMinMax();
-                        break;
-                    case >= 182 and < 198:
-                        DetermineLowerMinMax();
-                        break;
-                }
-            
-                CreateRandomDices();
-                break;
-            }
-            case 20:
-            {
-                var remainder = MaxTotal - _totalAll;
-                CreateRandomDicesToTotal(remainder);
-            
-                throwButton.interactable = false;
-                break;
-            }
-        }
-    }
-
-    private void DetermineUpperMinMax()
-    {
-        _minValue = 4;
-        _maxValue = 7;
-    }
-    private void DetermineMediumMinMax()
-    {
-        _minValue = 1;
-        _maxValue = 7;
-    }
-    private void DetermineLowerMinMax()
-    {
-        _minValue = 1;
-        _maxValue = 4;
-    }
-    private void CreateRandomDices()
-    {
-        _firstDiceResult = Random.Range(_minValue, _maxValue); 
-        _secondDiceResult = Random.Range(_minValue, _maxValue); 
-        _thirdDiceResult = Random.Range(_minValue, _maxValue); 
-            
-        firstDiceText.text = _firstDiceResult.ToString();
-        secondDiceText.text = _secondDiceResult.ToString();
-        thirdDiceText.text = _thirdDiceResult.ToString();
-    }
-
-    private void CreateRandomDicesToTotal(int number)
-    {
-        do 
-        {
-            _firstDiceResult = Random.Range(1, 7);
-
-            _secondDiceResult = Random.Range(1, 7);
-
-            _thirdDiceResult = Random.Range(1, 7);
-        }while(number != _firstDiceResult + _secondDiceResult + _thirdDiceResult);
-            
-        firstDiceText.text = _firstDiceResult.ToString();
-        secondDiceText.text = _secondDiceResult.ToString();
-        thirdDiceText.text = _thirdDiceResult.ToString();
+        firstDiceText.text = nums.x.ToString();
+        secondDiceText.text = nums.y.ToString();
+        thirdDiceText.text = nums.z.ToString();
 
     }
-
-    private void AddDiceResults()
+    private void AddDiceResults(Vector3Int nums)
     {
-        _totalDices += _firstDiceResult + _secondDiceResult + _thirdDiceResult;
+        _totalDices += nums.x + nums.y + nums.z;
         totalDicesText.text = _totalDices.ToString();
         AddAllDiceResults();
         _totalDices = 0;
@@ -286,26 +118,66 @@ public class DicesManager : MonoBehaviour
         totalAllText.text = _totalAll.ToString();
     }
     
-    private void CalculateSelectedNumbers()
+    private void EditList()
     {
-        if (_randomNum1 != _throwCount && _randomNum2 != _throwCount && _randomNum3 != _throwCount) return;
-        
-        var selectedNumber = 0;
-        
-        if (_randomNum1 == _throwCount)
+        (_allDicesList[_randomNum1 - 1], _allDicesList[17]) = (_allDicesList[17], _allDicesList[_randomNum1 - 1]);
+        (_allDicesList[_randomNum2 - 1], _allDicesList[18]) = (_allDicesList[18], _allDicesList[_randomNum2 - 1]);
+        (_allDicesList[_randomNum3 - 1], _allDicesList[19]) = (_allDicesList[19], _allDicesList[_randomNum3 - 1]);
+    }
+
+    private void FindRandomValuesToMaxTotal()
+    {
+        do
         {
-            selectedNumber = ButtonManager.Instance.number1;
-        }
-        else if (_randomNum2 == _throwCount)
+            _allDicesList.Clear();
+            for (var i = 0; i < 17; i++)
+                AddToListRandomDices();
+            
+            AddToListSelectedNumbers();
+            
+        } while (AddListVariables() != MaxTotal);
+    }
+
+
+    private int AddListVariables()
+    {
+        var total = 0;
+        for (var i = 0; i < 20; i++)
         {
-            selectedNumber = ButtonManager.Instance.number2;
-        }
-        else if (_randomNum3 == _throwCount)
-        {
-            selectedNumber = ButtonManager.Instance.number3;
+            total += _allDicesList[i].x + _allDicesList[i].y + _allDicesList[i].z;
         }
 
-        CreateRandomDicesToTotal(selectedNumber);
+        return total;
+    }
+    private void AddToListRandomDices()
+    {
+        _firstDiceResult = Random.Range(MinRangeValue, MaxRangeValue); 
+        _secondDiceResult = Random.Range(MinRangeValue, MaxRangeValue); 
+        _thirdDiceResult = Random.Range(MinRangeValue, MaxRangeValue); 
+        
+        _allDicesList.Add(new Vector3Int(_firstDiceResult, _secondDiceResult, _thirdDiceResult));
+
+    }
+    private void CreateRandomDicesToTotal(int number)
+    {
+        do 
+        {
+            _firstDiceResult = Random.Range(1, 7);
+
+            _secondDiceResult = Random.Range(1, 7);
+
+            _thirdDiceResult = Random.Range(1, 7);
+        }while(number != _firstDiceResult + _secondDiceResult + _thirdDiceResult);
+            
+        _allDicesList.Add(new Vector3Int(_firstDiceResult, _secondDiceResult, _thirdDiceResult));
+
+    }
+
+    private void AddToListSelectedNumbers()
+    {
+        CreateRandomDicesToTotal(ButtonManager.Instance.number1);
+        CreateRandomDicesToTotal(ButtonManager.Instance.number2);
+        CreateRandomDicesToTotal(ButtonManager.Instance.number3);
 
     }
     
@@ -319,11 +191,11 @@ public class DicesManager : MonoBehaviour
 
         do
         {
-            _randomNum3 = Random.Range(10, 19);  //19 ve 20. zarlar toplama göre belirlenmeli.
+            _randomNum3 = Random.Range(10, 21);
         } while (_randomNum1 == _randomNum3 || _randomNum2 == _randomNum3 );
 
 
-        Debug.Log(_randomNum1 + " " + _randomNum2 + " " + _randomNum3);
+        Debug.Log("Random Throw Orders for Selected Numbers: " + _randomNum1 + ", " + _randomNum2 + ", " + _randomNum3);
         
     }
     

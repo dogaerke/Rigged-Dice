@@ -37,17 +37,17 @@ public class ButtonManager : MonoBehaviour
         {
             case 0:
                 int.TryParse(buttonText, out number1);        
-                Debug.Log(number1);
+                Debug.Log("First Selected Number: " + number1);
 
                 break;
             case 1:
                 int.TryParse(buttonText, out number2);
-                Debug.Log(number2);
+                Debug.Log("Second Selected Number: " + number2);
 
                 break;
             case 2:
                 int.TryParse(buttonText, out number3);
-                Debug.Log(number3);
+                Debug.Log("Third Selected Number: " + number3);
 
                 dicesUI.SetActive(true);
                 numbersUI.SetActive(false);
